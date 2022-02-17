@@ -4,6 +4,15 @@ import codecs
 import urllib.request
 import urllib.error
 import sys
+import os
+
+import dash                     # pip install dash
+from dash.dependencies import Input, Output, State
+from dash import dcc
+from dash import html
+import plotly.express as px     # pip install plotly==5.2.2
+
+import pandas as pd             # pip install pandas
 
 """
 API use: visual crossing weather
@@ -105,28 +114,55 @@ def print_():
 
     print()
 
-# This is the core of our weather query URL
-BaseURL = 'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/'
 
-ApiKey='PR5EXHJK5579L98NV9LLHD5D2'#'8RYFYFN8XDHFVWQQD855F2CD4'
-#UnitGroup sets the units of the output - us or metric
-UnitGroup='metric'
-
-#Locations for the weather data
-
-Cities=['Bogota,DC', 'Medellin','Barranquilla', 'Cartagena', 'Bucaramanga']
-TemperaturesOfCities=[]
-for i in Cities:
-    ApiQuery=concatenate(i)
-    print_()
-
-# Create and export csv
-headers=["Ciudad", "Tempertura máxima", "Temperatura mínima", "Temperatura promedio"]
-
-with open("TemperaturasCiudadesColombia.csv","w") as temp:
-    Temp = csv.writer(temp)
-    Temp.writerow(headers)
-    Temp.writerows(TemperaturesOfCities)
+if not os.path.isfile('TemperaturasCiudadesColombia.csv'):
 
 
+    # This is the core of our weather query URL
+    BaseURL = 'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/'
 
+    ApiKey='PR5EXHJK5579L98NV9LLHD5D2'#'8RYFYFN8XDHFVWQQD855F2CD4'
+    #UnitGroup sets the units of the output - us or metric
+    UnitGroup='metric'
+
+    #Locations for the weather data
+
+    Cities=['Bogota,DC', 'Medellin','Barranquilla', 'Cartagena', 'Bucaramanga']
+    TemperaturesOfCities=[]
+    for i in Cities:
+        ApiQuery=concatenate(i)
+        print_()
+
+    # Create and export csv
+    headers=["Ciudad", "Tempertura máxima", "Temperatura mínima", "Temperatura promedio"]
+
+    with open("TemperaturasCiudadesColombia.csv","w") as temp:
+        Temp = csv.writer(temp)
+        Temp.writerow(headers)
+        Temp.writerows(TemperaturesOfCities)
+
+else:
+    # Dashboard
+    df = pd.read_csv("TemperaturasCiudadesColombia.csv")
+    print(df.head())
+
+    external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+    app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+    app.layout = html.Div([
+        html.H1("Analytics Dashboard of Cities Temperature (Dash Plotly)", style={"textAlign": "center"}),
+        html.Hr(),
+        html.P("Choose city of interest:"),
+        html.Div(html.Div([
+            dcc.Dropdown(id='Ciudad', clearable=False,
+                         value="Bogotá",
+                         options=[{'label': x, 'value': x} for x in
+                                  df["Ciudad"].unique()]),
+
+        ], className="two columns"), className="row"),
+
+        html.Div(id="output-div", children=[]),
+    ])
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
