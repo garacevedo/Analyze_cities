@@ -4,6 +4,9 @@ import urllib.request
 import urllib.error
 import sys
 
+"""
+API use: visual crossing weather
+"""
 def concatenate(city):
     # If nothing is specified, the forecast is retrieved.
     # If start date only is specified, a single historical or forecast day will be retrieved
@@ -105,5 +108,8 @@ ApiKey='PR5EXHJK5579L98NV9LLHD5D2'#'8RYFYFN8XDHFVWQQD855F2CD4'
 #UnitGroup sets the units of the output - us or metric
 UnitGroup='metric'
 
-ApiQuery = concatenate('Bogota')
-print_()
+Cities=['Bogota,DC', 'Medellin','Barranquilla', 'Cartagena', 'Bucaramanga']
+TemperaturesOfCities=[]
+for i in Cities:
+    ApiQuery=concatenate(i)
+    print_()
