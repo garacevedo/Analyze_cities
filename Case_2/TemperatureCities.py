@@ -1,3 +1,4 @@
+
 import csv
 import codecs
 import urllib.request
@@ -7,6 +8,7 @@ import sys
 """
 API use: visual crossing weather
 """
+
 def concatenate(city):
     # If nothing is specified, the forecast is retrieved.
     # If start date only is specified, a single historical or forecast day will be retrieved
@@ -50,6 +52,7 @@ def concatenate(city):
         ApiQuery += "&include=" + Include
 
     ApiQuery += "&key=" + ApiKey
+    return ApiQuery
 
 def print_():
     print(' - Running query URL: ', ApiQuery)
@@ -78,16 +81,16 @@ def print_():
             FirstRow = Row
         else:
             print('Weather in ', Row[0], ' on ', Row[1])
-
+            temp=[Row[0]]
 
             ColIndex = 0
             for Col in Row:
                 if ColIndex >= 4:
                     if 'feels' in FirstRow[ColIndex]:
                         print('   ', FirstRow[ColIndex], ' = ', Row[ColIndex])
-
+                        temp.append(Row[ColIndex])
                 ColIndex += 1
-
+            TemperaturesOfCities.append(temp)
         RowIndex += 1
 
     # If there are no CSV rows then something fundamental went wrong
@@ -102,14 +105,28 @@ def print_():
 
     print()
 
+# This is the core of our weather query URL
 BaseURL = 'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/'
 
 ApiKey='PR5EXHJK5579L98NV9LLHD5D2'#'8RYFYFN8XDHFVWQQD855F2CD4'
 #UnitGroup sets the units of the output - us or metric
 UnitGroup='metric'
 
+#Locations for the weather data
+
 Cities=['Bogota,DC', 'Medellin','Barranquilla', 'Cartagena', 'Bucaramanga']
 TemperaturesOfCities=[]
 for i in Cities:
     ApiQuery=concatenate(i)
     print_()
+
+# Create and export csv
+headers=["Ciudad", "Tempertura máxima", "Temperatura mínima", "Temperatura promedio"]
+
+with open("TemperaturasCiudadesColombia.csv","w") as temp:
+    Temp = csv.writer(temp)
+    Temp.writerow(headers)
+    Temp.writerows(TemperaturesOfCities)
+
+
+
