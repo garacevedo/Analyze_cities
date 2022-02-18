@@ -20,38 +20,26 @@ API use: visual crossing weather
 """
 
 def concatenate(city):
-    # If nothing is specified, the forecast is retrieved.
-    # If start date only is specified, a single historical or forecast day will be retrieved
-    # Optional start and end dates
-    # If both start and and end date are specified, a date range will be retrieved
+
     StartDate = '2020-12-01'
     EndDate = '2020-12-31'
 
-    # JSON or CSV
-    # JSON format supports daily, hourly, current conditions, weather alerts and events in a single JSON package
-    # CSV format requires an 'include' parameter below to indicate which table section is required
     ContentType = "csv"
 
-    # include sections
-    # values include days,hours,current,alerts
     Include = "days"
 
     print('')
     print(' - Requesting weather : ')
 
-    # basic query including location
     ApiQuery = BaseURL + city
 
-    # append the start and end date if present
     if (len(StartDate)):
         ApiQuery += "/" + StartDate
         if (len(EndDate)):
             ApiQuery += "/" + EndDate
 
-    # Url is completed. Now add query parameters (could be passed as GET or POST)
     ApiQuery += "?"
 
-    # append each parameter as necessary
     if (len(UnitGroup)):
         ApiQuery += "&unitGroup=" + UnitGroup
 
@@ -84,8 +72,6 @@ def print_():
 
     RowIndex = 0
 
-    # The first row contain the headers and the additional rows each contain the weather metrics for a single day
-    # To simply our code, we use the knowledge that column 0 contains the location and column 1 contains the date.  The data starts at column 4
     for Row in CSVText:
         if RowIndex == 0:
             FirstRow = Row
@@ -98,13 +84,12 @@ def print_():
             for Col in Row:
                 if ColIndex >= 4:
                     if 'feels' in FirstRow[ColIndex]:
-                        print('   ', FirstRow[ColIndex], ' = ', Row[ColIndex])
+                        #print('   ', FirstRow[ColIndex], ' = ', Row[ColIndex])
                         temp.append(Row[ColIndex])
                 ColIndex += 1
             TemperaturesOfCities.append(temp)
         RowIndex += 1
 
-    # If there are no CSV rows then something fundamental went wrong
     if RowIndex == 0:
         print('Sorry, but it appears that there was an error connecting to the weather server.')
         print('Please check your network connection and try again..')
@@ -116,6 +101,7 @@ def print_():
 
     print()
 
+
 def dashboard():
     app.layout = html.Div(children=[
         html.H1(children="Analytics Dashboard of Cities Temperature (Dash Plotly)", style={"textAlign": "center"}),
@@ -124,16 +110,16 @@ def dashboard():
         # html.Div(#html.Div([
         dcc.Dropdown(id='dropdown', clearable=False,
 
-                     options=[{'label': 'Bogotá', 'value': 'Bogotá, D.C., Colombia'},  # for x indf["Ciudad"].unique()
+                     options=[{'label': 'Bogotá', 'value': 'Bogotá, D.C., Colombia'},
                               {'label': 'Medellín', 'value': 'Medellín, Colombia'},
                               {'label': 'Barranquilla', 'value': 'Barranquilla, Colombia'},
                               {'label': 'Cartagena', 'value': 'Cartagena, Colombia'},
                               {'label': 'Bucaramanga', 'value': 'Bucaramanga, Colombia'}
                               ], value="Bogotá"),
 
-        # , className="two columns"), className="row"),
+
         dcc.Graph(id='output-div')
-        # html.Div(id='output-div')#, children=[]),
+
     ])
 
     @app.callback(Output(component_id='output-div', component_property='figure'),
@@ -142,12 +128,12 @@ def dashboard():
         dff = df[df["Ciudad"] == city_chosen]
 
         print(dff)
-        # fig = px.line(dff, x="Fecha", y=["Temperatura_maxima","Temperatura_minima", "Temperatura_promedio"], color="Ciudad")
         fig = px.line(dff, x="Fecha", y="Temperatura_maxima", color='Ciudad')
         fig.add_scatter(x=dff["Fecha"], y=dff["Temperatura_minima"], name="Temp_min")
         fig.add_scatter(x=dff["Fecha"], y=dff["Temperatura_promedio"], name="Temp_prom")
-        fig.update_layout(yaxis={"title": "Temperaturas(C°)"})
-        # fig.update_traces(mode="markers+lines")
+        fig.update_layout(yaxis={"title": "Temperatura(C°)"},
+                          xaxis={"title": "Día"})
+        
         return fig
 
 
