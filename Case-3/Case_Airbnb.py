@@ -17,6 +17,7 @@ for i in df.columns.values:
 
 df["avg_filas"]=df[col_reviews].mean(axis=1)
 
-# Objetivo 1
-
+#Objetivo 1
+print(df[["avg_filas","price","property_type"]].sort_values(by=[ "avg_filas","price"], ascending=True).head(20))
+#Objetivo 2
 print(df[["avg_filas","price","property_type"]].sort_values(by=[ "avg_filas","price"], ascending=False).head(20))
