@@ -11,6 +11,7 @@ from dash.dependencies import Input, Output, State
 from dash import dcc
 from dash import html
 import plotly.express as px     # pip install plotly==5.2.2
+import plotly.graph_objects as go
 
 import pandas as pd             # pip install pandas
 
@@ -91,6 +92,7 @@ def print_():
         else:
             print('Weather in ', Row[0], ' on ', Row[1])
             temp=[Row[0]]
+            temp.append(Row[1])
 
             ColIndex = 0
             for Col in Row:
@@ -114,14 +116,46 @@ def print_():
 
     print()
 
+def dashboard():
+    app.layout = html.Div(children=[
+        html.H1(children="Analytics Dashboard of Cities Temperature (Dash Plotly)", style={"textAlign": "center"}),
+        html.Hr(),
+        html.P("Choose city of interest:"),
+        # html.Div(#html.Div([
+        dcc.Dropdown(id='dropdown', clearable=False,
+
+                     options=[{'label': 'Bogotá', 'value': 'Bogotá, D.C., Colombia'},  # for x indf["Ciudad"].unique()
+                              {'label': 'Medellín', 'value': 'Medellín, Colombia'},
+                              {'label': 'Barranquilla', 'value': 'Barranquilla, Colombia'},
+                              {'label': 'Cartagena', 'value': 'Cartagena, Colombia'},
+                              {'label': 'Bucaramanga', 'value': 'Bucaramanga, Colombia'}
+                              ], value="Bogotá"),
+
+        # , className="two columns"), className="row"),
+        dcc.Graph(id='output-div')
+        # html.Div(id='output-div')#, children=[]),
+    ])
+
+    @app.callback(Output(component_id='output-div', component_property='figure'),
+                  Input(component_id='dropdown', component_property='value'))
+    def update_graph(city_chosen):
+        dff = df[df["Ciudad"] == city_chosen]
+
+        print(dff)
+        # fig = px.line(dff, x="Fecha", y=["Temperatura_maxima","Temperatura_minima", "Temperatura_promedio"], color="Ciudad")
+        fig = px.line(dff, x="Fecha", y="Temperatura_maxima", color='Ciudad')
+        fig.add_scatter(x=dff["Fecha"], y=dff["Temperatura_minima"], name="Temp_min")
+        fig.add_scatter(x=dff["Fecha"], y=dff["Temperatura_promedio"], name="Temp_prom")
+        fig.update_layout(yaxis={"title": "Temperaturas(C°)"})
+        # fig.update_traces(mode="markers+lines")
+        return fig
+
 
 if not os.path.isfile('TemperaturasCiudadesColombia.csv'):
-
-
     # This is the core of our weather query URL
     BaseURL = 'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/'
 
-    ApiKey='PR5EXHJK5579L98NV9LLHD5D2'#'8RYFYFN8XDHFVWQQD855F2CD4'
+    ApiKey='8RYFYFN8XDHFVWQQD855F2CD4'#'PR5EXHJK5579L98NV9LLHD5D2'
     #UnitGroup sets the units of the output - us or metric
     UnitGroup='metric'
 
@@ -134,35 +168,21 @@ if not os.path.isfile('TemperaturasCiudadesColombia.csv'):
         print_()
 
     # Create and export csv
-    headers=["Ciudad", "Tempertura máxima", "Temperatura mínima", "Temperatura promedio"]
+    headers=["Ciudad", "Fecha", "Tempertura_maxima", "Temperatura_minima", "Temperatura_promedio"]
 
     with open("TemperaturasCiudadesColombia.csv","w") as temp:
         Temp = csv.writer(temp)
         Temp.writerow(headers)
         Temp.writerows(TemperaturesOfCities)
-
-else:
-    # Dashboard
     df = pd.read_csv("TemperaturasCiudadesColombia.csv")
-    print(df.head())
-
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
     app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
-    app.layout = html.Div([
-        html.H1("Analytics Dashboard of Cities Temperature (Dash Plotly)", style={"textAlign": "center"}),
-        html.Hr(),
-        html.P("Choose city of interest:"),
-        html.Div(html.Div([
-            dcc.Dropdown(id='Ciudad', clearable=False,
-                         value="Bogotá",
-                         options=[{'label': x, 'value': x} for x in
-                                  df["Ciudad"].unique()]),
-
-        ], className="two columns"), className="row"),
-
-        html.Div(id="output-div", children=[]),
-    ])
+    dashboard()
+else:
+    df = pd.read_csv("TemperaturasCiudadesColombia.csv")
+    external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+    app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+    dashboard()
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, host='0.0.0.0', port=8000)
